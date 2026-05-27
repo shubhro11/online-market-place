@@ -1,6 +1,6 @@
 const { body, validationResult } = require("express-validator");
 
-const respondwithValidationErrors = (req, res, next) => {
+const validationErrorResponse = (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty())
@@ -100,7 +100,7 @@ const registerUserValidations = [
     .isIn(["user", "seller"])
     .withMessage("Role must be either 'user' or 'seller'"),
 
-  respondwithValidationErrors,
+  validationErrorResponse,
 ];
 
 // For Login
@@ -173,7 +173,7 @@ const loginUserValidations = [
     return true;
   }),
 
-  respondwithValidationErrors,
+  validationErrorResponse,
 ];
 
 // Add New Address
@@ -223,7 +223,7 @@ const addUserAddressValidations = [
     .matches(/^[A-Za-z\s.'-]+$/)
     .withMessage("Country contains invalid characters"),
 
-  respondwithValidationErrors,
+  validationErrorResponse,
 ];
 
 module.exports = {

@@ -123,6 +123,7 @@ async function loginUser(req, res) {
       message: "User Logged-in Successfully",
       user: {
         id: user._id,
+        username: user.username,
         email: user.email,
         fullName: user.fullName,
         role: user.role,
@@ -327,13 +328,3 @@ module.exports = {
   addNewUserAddress,
   deleteUserAddress,
 };
-
-// user.addresses.push({
-//   street: "123 Main Street",
-//   city: "Metropolis",
-//   state: "NY",
-//   zip: "10001",
-//   country: "USA",
-//   phone: "9876543210",
-//   isDefault: true,
-// });

@@ -1,5 +1,5 @@
 const express = require("express")
-const validators = require("../middlewares/validation.middleware")
+const validators = require("../validators/user.validators")
 const authController = require("../controllers/auth.controller")
 const middlewares = require("../middlewares/auth.middleware")
 
