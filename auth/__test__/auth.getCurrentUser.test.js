@@ -1,16 +1,12 @@
 const request = require('supertest');
-const express = require('express');
-
-// 1. Setup the mock function
+const app = require("../src/app");
 const mockAuthMiddleware = jest.fn();
 
-// 2. Mock the entire module to return an object containing your mock function
+// Mock the entire module to return an object containing your mock function
 jest.mock("../src/middlewares/auth.middleware.js", () => ({
   authMiddleware: (req, res, next) => mockAuthMiddleware(req, res, next)
 }));
 
-// 3. Import your express app (which internally imports the mocked middleware module)
-const app = require("../src/app");
 
 describe('GET /api/auth/me', () => {
   
@@ -18,10 +14,9 @@ describe('GET /api/auth/me', () => {
     jest.clearAllMocks();
   });
 
-  // ==========================================
-  // 1. SUCCESS CASES (AUTHORIZED VIA COOKIE)
-  // ==========================================
+  // SUCCESS CASES (AUTHORIZED VIA COOKIE)
   describe('When authenticated via cookie', () => {
+
     const validCookie = ['sid=s%3Avalid_session_id.123456789'];
 
     it('should return 200 OK and the current user details from req.user', async () => {
@@ -49,12 +44,12 @@ describe('GET /api/auth/me', () => {
         user: mockUser
       });
     });
+
   });
 
-  // ==========================================
-  // 2. FAILURE CASES (UNAUTHORIZED)
-  // ==========================================
+  // FAILURE CASES (UNAUTHORIZED)
   describe('When unauthenticated or cookie is invalid', () => {
+
     it('should return 401 Unauthorized if middleware intercepts and blocks the request', async () => {
       // Instruct our spy mock to mimic a failed cookie verification
       mockAuthMiddleware.mockImplementation((req, res, next) => {
@@ -73,5 +68,7 @@ describe('GET /api/auth/me', () => {
         message: 'Unauthorized. Please log in.'
       });
     });
+
   });
+
 });

@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-function createAuthMiddleware(roles = ["user"]) {
-
+function AuthMiddleware(roles = ["user"]) {
   return function authMiddleware(req, res, next) {
     const token =
       req.cookies?.token || req.headers?.authorization?.split(" ")[1];
@@ -25,7 +24,6 @@ function createAuthMiddleware(roles = ["user"]) {
 
       req.user = decoded;
       next();
-
     } catch (error) {
       return res.status(401).json({
         success: false,
@@ -35,4 +33,4 @@ function createAuthMiddleware(roles = ["user"]) {
   };
 }
 
-module.exports = {createAuthMiddleware}
+module.exports = { AuthMiddleware };

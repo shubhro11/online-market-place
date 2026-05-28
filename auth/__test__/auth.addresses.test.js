@@ -26,18 +26,15 @@ jest.mock("../src/models/user.model", () => ({
 describe("Address Management API (/api/auth/users/me/addresses)", () => {
   let authToken;
 
-  beforeAll(() => {
-    authToken = "Bearer mock-valid-jwt-token";
-  });
+  beforeAll(() => authToken = "Bearer mock-valid-jwt-token")
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  afterEach(() => jest.clearAllMocks())
 
   // ==========================================
   // 1. POST /api/auth/users/me/addresses
   // ==========================================
   describe("POST /api/auth/users/me/addresses", () => {
+    
     it("should successfully add a new address with valid data", async () => {
       const validAddress = {
         addressLine1: "123 Main Street",
@@ -91,12 +88,14 @@ describe("Address Management API (/api/auth/users/me/addresses)", () => {
 
       expect(res.statusCode).toBe(401);
     });
+
   });
 
   // ==========================================
   // 2. GET /api/auth/users/me/addresses
   // ==========================================
   describe("GET /api/auth/users/me/addresses", () => {
+
     it("should retrieve a list of all saved addresses for the user", async () => {
       userModel.findById.mockImplementation(() => ({
         select: jest.fn().mockResolvedValue({
@@ -130,12 +129,14 @@ describe("Address Management API (/api/auth/users/me/addresses)", () => {
       expect(res.body.addresses[0]).toHaveProperty("isDefault");
       expect(typeof res.body.addresses[0].isDefault).toBe("boolean");
     });
+
   });
 
   // ==========================================
   // 3. DELETE /api/auth/users/me/addresses/:addressId
   // ==========================================
   describe("DELETE /api/auth/users/me/addresses/:addressId", () => {
+
     it("should delete the specified address and return a success message", async () => {
       // 1. Mock findOne to simulate that the address exists before removal
       userModel.findOne.mockResolvedValue({ _id: mockUserId });
@@ -170,5 +171,7 @@ describe("Address Management API (/api/auth/users/me/addresses)", () => {
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe("Address not found"); // Matches your controller's exit response string
     });
+
   });
+
 });

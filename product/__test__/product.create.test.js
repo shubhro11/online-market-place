@@ -1,45 +1,46 @@
+require("../tests/setupMocks");
+const dbHandler = require("../tests/dbHandler");
+
 const request = require('supertest');
 const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const app = require('../src/app'); // Path to your Express app
-const productModel = require('../src/models/product.model'); // Path to your Product model
-const dbHandler = require("../tests/dbHandler"); // Import the helper we just made
+const app = require('../src/app'); 
 
-// Use the database helper hooks globally
+// 💡 Control state variable to simulate authentication states dynamically
+let mockUser = null;
+
+// Mock the AuthMiddleware to completely bypass signature checks and use our control variable
+jest.mock('../src/middlewares/auth.middleware.js', () => ({
+  AuthMiddleware: (roles) => (req, res, next) => {
+    // 1. Simulate a 401 if no active auth session state is provided
+    if (!mockUser) {
+      return res.status(401).json({ success: false, message: "No token provided" });
+    }
+    
+    // 2. Simulate a 403 if the endpoint demands a role the user doesn't possess
+    if (roles && roles.length > 0 && !roles.includes(mockUser.role)) {
+      return res.status(403).json({ success: false, message: "Forbidden: Access denied" });
+    }
+
+    // 3. Populate user context and move seamlessly to your controller layer
+    req.user = mockUser;
+    next();
+  }
+}));
+
 beforeAll(async () => await dbHandler.connect());
 afterEach(async () => await dbHandler.clearDatabase());
 afterAll(async () => await dbHandler.closeDatabase());
 
-// 1. Mock ImageKit (Using your official @imagekit/nodejs package)
-jest.mock('../src/services/imagekit.service.js', () => {
-  return jest.fn().mockResolvedValue({
-    url: 'https://ik.imagekit.io/mock/test-image.jpg',
-    thumbnail: 'https://ik.imagekit.io/mock/test-image_thumb.jpg',
-    id: 'mock_file_id_123'
-  });
-});
-
-// 2. Keep your UUID mock for standard safety
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mocked-static-uuid-1111-2222')
-}));
-
 describe('POST /api/products', () => {
   let mockSellerId;
-  let authToken; 
-  let validProduct; // Declared here so it's accessible across it() blocks
+  let validProduct; 
 
-  beforeAll(() => {
+  beforeEach(() => {
     mockSellerId = new mongoose.Types.ObjectId().toString();
 
-    // Sign a mock token using the exact secret fallback defined in your dbHandler
-    authToken = jwt.sign(
-      { id: mockSellerId, role: 'seller' },
-      process.env.JWT_SECRET || 'test_fallback_jwt_secret_key_12345',
-      { expiresIn: '1h' }
-    );
+    // Default State: Safely assume standard operating user is the target seller
+    mockUser = { id: mockSellerId, role: 'seller' };
 
-    // Initialize validProduct now that mockSellerId is defined
     validProduct = {
       title: 'Wireless Headphones',
       description: 'Noise-canceling over-ear headphones',
@@ -58,12 +59,15 @@ describe('POST /api/products', () => {
     };
   });
 
-  // --- SUCCESS CASES ---
+  // ==========================================
+  // --- 1. SUCCESS CASES ---
+  // ==========================================
   describe('Success Cases', () => {
+    
     it('should successfully create a product with valid data and images', async () => {
       const response = await request(app)
         .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`) // Bypass 401
+        .set('Authorization', 'Bearer fake-valid-token')
         .field('title', validProduct.title)
         .field('description', validProduct.description)
         .field('amount', validProduct.price.amount)
@@ -77,7 +81,7 @@ describe('POST /api/products', () => {
     it('should use default currency (INR) if not provided', async () => {
       const response = await request(app)
         .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`) // Bypass 401
+        .set('Authorization', 'Bearer fake-valid-token')
         .field('title', 'Minimalist Wallet')
         .field('amount', 999)
         .field('seller', mockSellerId);
@@ -88,21 +92,25 @@ describe('POST /api/products', () => {
     it('should create a product without optional descriptions or images', async () => {
       const response = await request(app)
         .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`) // Bypass 401
+        .set('Authorization', 'Bearer fake-valid-token')
         .field('title', 'Simple Mug')
         .field('amount', 299)
         .field('seller', mockSellerId);
 
       expect(response.status).toBe(201);
     });
+
   });
 
-  // --- FAILURE / VALIDATION CASES ---
+  // ==========================================
+  // --- 2. FAILURE / VALIDATION CASES ---
+  // ==========================================
   describe('Failure/Validation Cases', () => {
+
     it('should return 400 if required fields are missing (title, price)', async () => {
       const response = await request(app)
         .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`) // Bypass 401
+        .set('Authorization', 'Bearer fake-valid-token')
         .field('description', 'Missing everything else');
 
       expect(response.status).toBe(400);
@@ -118,7 +126,7 @@ describe('POST /api/products', () => {
     it('should return 400 if currency is not INR or USD', async () => {
       const response = await request(app)
         .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`) // Bypass 401
+        .set('Authorization', 'Bearer fake-valid-token')
         .field('title', 'Invalid Currency Item')
         .field('amount', 50)
         .field('currency', 'EUR')
@@ -136,7 +144,7 @@ describe('POST /api/products', () => {
     it('should return 400 if price amount is 0 or less', async () => {
       const response = await request(app)
         .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`) // Bypass 401
+        .set('Authorization', 'Bearer fake-valid-token')
         .field('title', 'Free Item?')
         .field('amount', -5)
         .field('seller', mockSellerId);
@@ -155,7 +163,7 @@ describe('POST /api/products', () => {
 
       const response = await request(app)
         .post('/api/products')
-        .set('Authorization', `Bearer ${authToken}`) // Bypass 401
+        .set('Authorization', 'Bearer fake-valid-token')
         .field('title', 'Super Long Description Item')
         .field('amount', 299)
         .field('description', longDescription)
@@ -169,5 +177,18 @@ describe('POST /api/products', () => {
         ])
       );
     });
+
+    it('should return 401 Unauthorized if no token is provided', async () => {
+      // Force user state to unauthenticated
+      mockUser = null;
+
+      const response = await request(app)
+        .post('/api/products')
+        .field('title', 'Unauthorized Item')
+        .field('amount', 100);
+
+      expect(response.status).toBe(401);
+    });
+
   });
 });

@@ -1,34 +1,24 @@
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
+process.env.JWT_SECRET = 'test_fallback_jwt_secret_key_12345';
+process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/test_fallback';
+
 let mongoServer;
 
-/**
- * Connect to the in-memory database.
- */
+// Connect to the in-memory database.
 const connect = async () => {
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
   
   // Assign to the environment variable your app expects
   process.env.MONGODB_URI = uri;
-  process.env.JWT_SECRET = 'test_fallback_jwt_secret_key_12345';
 
   await mongoose.connect(uri);
   console.log("Connected to Database")
 };
 
-/**
- * Drop database, close the connection and stop the server.
- */
-const closeDatabase = async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
-};
-
-/**
- * Remove all data from all collections.
- */
+// Remove all data from all collections.
 const clearDatabase = async () => {
   const collections = mongoose.connection.collections;
   for (const key in collections) {
@@ -37,8 +27,10 @@ const clearDatabase = async () => {
   }
 };
 
-module.exports = {
-  connect,
-  closeDatabase,
-  clearDatabase
+// Drop database, close the connection and stop the server.
+const closeDatabase = async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
 };
+
+module.exports = { connect, closeDatabase, clearDatabase };

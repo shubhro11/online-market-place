@@ -1,14 +1,20 @@
+const dbHandler = require("../tests/dbHandler");
+
 const request = require("supertest");
 const app = require("../src/app");
-const userModel = require("../src/models/user.model"); // Path to your Mongoose model
-const dbHandler = require("../tests/dbHandler"); // Import the helper we just made
+const userModel = require("../src/models/user.model");
 
-// Use the database helper hooks
-beforeAll(async () => await dbHandler.connect());
-afterEach(async () => await dbHandler.clearDatabase());
-afterAll(async () => await dbHandler.closeDatabase());
 
 describe('POST /api/auth/register', () => {
+
+  beforeAll(async () => {
+    await dbHandler.connect();
+    // Enforces unique compound or text indexes for the user collections in-memory
+    await userModel.ensureIndexes();
+  });
+  
+  afterEach(async () => await dbHandler.clearDatabase());
+  afterAll(async () => await dbHandler.closeDatabase());
 
   const validUserPayload = {
     username: "pixel_dev",
@@ -20,6 +26,7 @@ describe('POST /api/auth/register', () => {
     },
   };
 
+  // --- SUCCESS SCENARIOS ---
   describe('Success Scenarios', () => {
     it('should create a user, hash the password, and omit password from response', async () => {
       const response = await request(app)
@@ -29,7 +36,6 @@ describe('POST /api/auth/register', () => {
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('user');
       expect(response.body.user).toHaveProperty('email', validUserPayload.email);
-      
       expect(response.body.user).not.toHaveProperty('password');
 
       const dbUser = await userModel.findOne({ email: validUserPayload.email }).select('+password');
@@ -42,7 +48,9 @@ describe('POST /api/auth/register', () => {
     });
   });
 
+  // --- INPUT VALIDATION FAILURES ---
   describe('Input Validation Failures', () => {
+
     it('should fail if email is missing', async () => {
       const { email, ...payloadWithoutEmail } = validUserPayload;
 
@@ -106,9 +114,12 @@ describe('POST /api/auth/register', () => {
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('errors');
     });
+
   });
 
+  // --- ACCOUNT DUPLICATION FAILURES ---
   describe('Account Duplication Failures', () => {
+
     it('should reject a duplicate email address', async () => {
       await userModel.create({
         username: 'existinguser',
@@ -165,6 +176,6 @@ describe('POST /api/auth/register', () => {
 
       expect(response.status).toBe(409);
     });
+
   });
-  
 });
