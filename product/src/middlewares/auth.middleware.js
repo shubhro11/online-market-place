@@ -3,7 +3,10 @@ const jwt = require("jsonwebtoken");
 function AuthMiddleware(roles = ["user"]) {
   return function authMiddleware(req, res, next) {
     const token =
-      req.cookies?.token || req.headers?.authorization?.split(" ")[1];
+      req.cookies?.token ||
+      (req.headers?.authorization?.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
+        : null);
 
     if (!token) {
       return res.status(401).json({
@@ -16,6 +19,7 @@ function AuthMiddleware(roles = ["user"]) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       if (!roles.includes(decoded.role)) {
+        x;
         return res.status(403).json({
           success: false,
           message: "Forbidden: Insufficient permissions",
