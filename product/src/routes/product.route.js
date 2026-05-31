@@ -16,7 +16,7 @@ router.post("/", middleware.AuthMiddleware(["admin", "seller"]), upload.array("i
 router.get("/", productController.getProducts);
 
 
-// GET /api/products/seller
+// GET /api/products => /seller
 router.get("/seller", middleware.AuthMiddleware(["seller"]), productController.getProductsBySeller)
 
 
@@ -26,10 +26,13 @@ router.get("/seller", middleware.AuthMiddleware(["seller"]), productController.g
 // GET /api/products => /:id
 router.get("/:id", productController.getProductById);
 
+
 // PATCH /api/products => /:id
 router.patch("/:id", middleware.AuthMiddleware(["seller"]), validator.updateProductValidation, productController.updateProduct);
 
+
 // DELETE /api/products => /:id
 router.delete("/:id", middleware.AuthMiddleware(["seller"]), productController.deleteProduct);
+
 
 module.exports = router;
