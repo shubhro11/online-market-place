@@ -19,7 +19,6 @@ function AuthMiddleware(roles = ["user"]) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       if (!roles.includes(decoded.role)) {
-        x;
         return res.status(403).json({
           success: false,
           message: "Forbidden: Insufficient permissions",
@@ -29,6 +28,11 @@ function AuthMiddleware(roles = ["user"]) {
       req.user = decoded;
       next();
     } catch (error) {
+      console.log("JWT ERROR:", error.name);
+      console.log("JWT MESSAGE:", error.message);
+      console.log("JWT SECRET:", process.env.JWT_SECRET);
+      console.log("TOKEN:", token);
+
       return res.status(401).json({
         success: false,
         message: "Unauthorized Access: Invalid Token",

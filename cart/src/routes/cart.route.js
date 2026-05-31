@@ -6,20 +6,22 @@ const cartController = require("../controllers/cart.controller");
 const router = express.Router();
 
 // GET => /api/cart => /
-router.get("/", middleware.AuthMiddleware, cartController.getCart)
+router.get("/", middleware.AuthMiddleware([ "user" ]), cartController.getCart)
 
 
 // POST => /api/cart => /items
 router.post(
   "/items",
-  middleware.AuthMiddleware,
+  middleware.AuthMiddleware([ "user" ]),
   validator.validateCart,
   cartController.addItemToCart,
 );
 
+
+// POST => /api/cart => /items/:productId
 router.patch(
   "/items/:productId",
-  middleware.AuthMiddleware,
+  middleware.AuthMiddleware([ "user" ]),
   validator.validateCartUpdate,
   cartController.updateItemQuantity,
 );

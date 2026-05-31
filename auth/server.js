@@ -8,4 +8,4 @@ connectDB()
 
 
 
-app.listen(3000, () => console.log("Server is running on Port 3000"))
+app.listen(3000, () => console.log("Auth Service is running on Port 3000"))

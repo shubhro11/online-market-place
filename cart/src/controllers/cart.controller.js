@@ -1,13 +1,14 @@
 const cartModel = require("../models/cart.model");
 
+// Get User Cart
 async function getCart(req, res) {
   const user = req.user;
 
   try {
-    let cart = await cartModel.findOne({ userId: user._id });
+    let cart = await cartModel.findOne({ userId: user.id });
 
     if (!cart) {
-      cart = new cartModel({ userId: user._id, items: [] });
+      cart = new cartModel({ userId: user.id, items: [] });
       await cart.save();
     }
 
@@ -30,15 +31,16 @@ async function getCart(req, res) {
   }
 }
 
+// Add Items to Cart
 async function addItemToCart(req, res) {
   const { productId, qty } = req.body;
   const user = req.user;
 
   try {
-    let cart = await cartModel.findOne({ userId: user._id });
+    let cart = await cartModel.findOne({ userId: user.id });
 
     if (!cart) {
-      cart = new cartModel({ userId: user._id, items: [] });
+      cart = new cartModel({ userId: user.id, items: [] });
     }
 
     const existingItemIndex = cart.items.findIndex(
@@ -63,6 +65,7 @@ async function addItemToCart(req, res) {
   }
 }
 
+// Update Item Quantity
 async function updateItemQuantity(req, res) {
   const { productId } = req.params;
   const { qty } = req.body;
