@@ -5,4 +5,9 @@ const connectDB = require("./src/db/db")
 
 connectDB()
 
-app.listen(3001, () => console.log("Product Service is running on Port 3001"))
+
+const servicePort = process.env.SERVICE_PORT || 3001;
+
+app.listen(servicePort, () =>
+  console.log(`Product Service is running on Port ${servicePort}`),
+);

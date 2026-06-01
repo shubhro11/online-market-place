@@ -1,8 +1,13 @@
 require("dotenv").config()
 
 const app = require("./src/app")
-const connectToDB = require("./src/db/db")
-connectToDB()
+const connectDB = require("./src/db/db")
+
+connectDB()
 
 
-app.listen(3002, () => console.log("Cart Service running on Port 3002"))
+const servicePort = process.env.SERVICE_PORT || 3002;
+
+app.listen(servicePort, () =>
+  console.log(`Cart Service is running on Port ${servicePort}`),
+);

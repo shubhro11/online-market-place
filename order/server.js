@@ -5,7 +5,8 @@ const connectDB = require("./src/db/db");
 connectDB()
 
 
+const servicePort = process.env.SERVICE_PORT || 3003;
 
-app.listen(3003, () => {
-  console.log(`Order service is running on Port 3003`);
-});
+app.listen(servicePort, () =>
+  console.log(`Order Service is running on Port ${servicePort}`),
+);
