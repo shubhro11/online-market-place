@@ -7,7 +7,7 @@ const router = express.Router()
 
 
 // POST /api/auth => /register
-router.post("/register", validators.registerUserValidations, authController.registerUser)
+router.post("/register", validators.registerUserValidations, authController.registerUser) 
 
 
 // POST /api/auth => /login
