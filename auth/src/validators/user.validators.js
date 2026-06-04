@@ -60,7 +60,11 @@ const registerUserValidations = [
       return true;
     })
 
-    .normalizeEmail(),
+    .normalizeEmail({
+      all_lowercase: true,
+      gmail_remove_dots: false,
+      gmail_remove_subaddress: false,
+    }),
 
   body("password")
     .notEmpty()
@@ -149,7 +153,11 @@ const loginUserValidations = [
       return true;
     })
 
-    .normalizeEmail(),
+    .normalizeEmail({
+      all_lowercase: true,
+      gmail_remove_dots: false,
+      gmail_remove_subaddress: false,
+    }),
 
   body("password")
     .notEmpty()
